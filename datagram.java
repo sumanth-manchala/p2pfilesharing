@@ -1,17 +1,12 @@
 import java.net.*;
 import java.util.*;
-class receive extends Thread
-{
-    DatagramSocket dss;
-    receive() throws SocketException
-    {
-        dss = new DatagramSocket(3333);
-    }
 
-    @Override
-    public void run() 
+class MyIpAddress 
+{
+    Vector <String> ip ;
+    MyIpAddress()
     {
-        Vector <String> v = new Vector<>();
+        ip = new Vector<>();
         try
         {
            
@@ -36,6 +31,22 @@ class receive extends Thread
         {
             System.out.println(e);
         }
+
+    }
+
+}
+class receive extends Thread
+{
+    DatagramSocket dss;
+    receive() throws SocketException
+    {
+        dss = new DatagramSocket(3333);
+    }
+
+    @Override
+    public void run() 
+    {
+        MyIpAddress myIpAddress = new MyIpAddress();
         
         while(true)
         {
@@ -44,7 +55,7 @@ class receive extends Thread
                 byte[] bf = new byte[1024];
                 DatagramPacket dp = new DatagramPacket(bf,1024);
                 dss.receive(dp);
-                if(!v.contains(dp.getAddress().getHostAddress()))
+                if(!myIpAddress.ip.contains(dp.getAddress().getHostAddress()))
                 {
                     String msg = new String(dp.getData(),0,dp.getLength());
                     System.out.println("Message from "+dp.getAddress().getHostAddress()+" "+msg);
