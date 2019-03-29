@@ -21,7 +21,7 @@ class MyIpAddress
                 for (; a.hasMoreElements();)
                 {
                     InetAddress addr = a.nextElement();
-                    v.add(addr.getHostAddress());
+                    ip.add(addr.getHostAddress());
                     System.out.println("  " + addr.getHostAddress());
                 }
             }
@@ -105,7 +105,7 @@ class send extends Thread
             {
                 System.out.println(e);
             }
-        }    
+        }   
     }
 }
 public class datagram
