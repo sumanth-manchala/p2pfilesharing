@@ -1,3 +1,4 @@
+import java.io.File;
 import java.net.*;
 import java.util.*;
 
@@ -35,6 +36,59 @@ class MyIpAddress
     }
 
 }
+class FileSearch
+{
+    //Vector <File> files = new Vector<>();
+    /*String filename;
+    FileSearch(String filename)
+    {
+        this.filename = filename;
+    }
+    public void search()
+    {
+        File dir = new File("/home/sumanth/Documents");
+        FilenameFilter filter = new FilenameFilter() 
+        {
+           public boolean accept (File dir, String name) 
+           { 
+              return name.startsWith(this.filename);
+           } 
+        }; 
+        String[] children = dir.list(filter);
+        if (children == null) 
+        {
+           System.out.println("Either dir does not exist or is not a directory"); 
+        } 
+        else 
+        { 
+           for (int i = 0; i< children.length; i++) 
+           {
+              String filename = children[i];
+              System.out.println(filename);
+           } 
+        } 
+ 
+    }*/
+    public Boolean findFile(String name,File file)
+    {
+        File[] list = file.listFiles();
+        if(list!=null)
+        for (File fil : list)
+        {
+            if (fil.isDirectory())
+            {
+                findFile(name,fil);
+            }
+            else if (name.equalsIgnoreCase(fil.getName()))
+            {
+                //System.out.println(fil.getParentFile());
+                //this.files.add(fil.getParentFile());
+                return true;
+            }
+        }
+        return false;
+    }
+}
 class receive extends Thread
 {
     DatagramSocket dss;
@@ -58,7 +112,29 @@ class receive extends Thread
                 if(!myIpAddress.ip.contains(dp.getAddress().getHostAddress()))
                 {
                     String msg = new String(dp.getData(),0,dp.getLength());
-                    System.out.println("Message from "+dp.getAddress().getHostAddress()+" "+msg);
+                    if(!(msg.equalsIgnoreCase("file found")||msg.equalsIgnoreCase("file not found")))
+                    {
+                        System.out.println("Requested file name is : "+dp.getAddress().getHostAddress()+" "+msg);
+                        FileSearch fs = new FileSearch();
+                        String respone;
+                        if(fs.findFile(msg,new File("/home/sumanth/Documents")))
+                        {
+                            respone = "File found";
+                        }
+                        else
+                        {
+                            respone = "File not found";
+                        } 
+                        dss.send(new DatagramPacket(respone.getBytes(),respone.length(), dp.getAddress(), 3333));
+
+                    }
+                    else
+                    {
+                        System.out.println(msg);
+                    }
+                   
+                    
+                    //dss.send(new Datagra);
                 }
             }
             catch(Exception e)
