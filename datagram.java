@@ -1,3 +1,5 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.net.*;
 import java.util.*;
@@ -112,7 +114,7 @@ class receive extends Thread
                 if(!myIpAddress.ip.contains(dp.getAddress().getHostAddress()))
                 {
                     String msg = new String(dp.getData(),0,dp.getLength());
-                    if(!(msg.equalsIgnoreCase("file found")||msg.equalsIgnoreCase("file not found")))
+                    if(!(msg.startsWith("File found")||msg.equalsIgnoreCase("File not found")))
                     {
                         pf = null;
                         System.out.println("Requested file name is : "+dp.getAddress().getHostAddress()+" "+msg);
@@ -130,12 +132,21 @@ class receive extends Thread
                         dss.send(new DatagramPacket(respone.getBytes(),respone.length(), dp.getAddress(), 3333));
 
                     }
+                    else if(msg.endsWith("connect"))
+                    {
+                        StringTokenizer str = new StringTokenizer(msg," ");
+                        int port = Integer.parseInt(str.nextToken());
+                        Socket s = new Socket(dp.getAddress().getHostAddress(),port);
+                        DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+                        dout.writeUTF("Hi Server");
+                        s.close();
+                    }
                     else
                     {  
                        System.out.println(msg);
                        if(msg.startsWith("File found"))
                        {
-                           send.ips.add(dp.getAddress().getHostAddress());
+                           send.ips.add(dp.getAddress());
                        }
                     }
                     
@@ -155,7 +166,7 @@ class send extends Thread
 {
     Scanner sc;
     DatagramSocket ds;
-    static Vector ips = new Vector<String>();
+    static Vector<InetAddress> ips = new Vector<InetAddress>();
     send() throws Exception
     {
         ds = new DatagramSocket();
@@ -184,6 +195,24 @@ class send extends Thread
                 ds.send(dp);
                 Thread.sleep(4000);
                 System.out.println("InetAddresses" +ips);
+                System.out.println("Select one of the IP's");
+                System.out.println("*0 1 2 3........");
+                for( InetAddress i : ips)
+                {
+                    System.out.println(i.getHostAddress());
+                }
+                int choice = sc.nextInt();
+                ServerSocket ss = new ServerSocket();
+                String port = Integer.toString(ss.getLocalPort());
+                port += "connect";
+                dp = new DatagramPacket(port.getBytes(),port.length(),InetAddress.getByName(ips.get(choice).getHostAddress()),3333);
+                ds.send(dp);
+                Socket s = ss.accept();
+                DataInputStream din = new DataInputStream(s.getInputStream());
+                System.out.println((String)din.readUTF());
+                s.close();
+                ss.close();
+
                // ds.close();
             }
             catch(Exception e)
