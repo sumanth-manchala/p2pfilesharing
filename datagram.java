@@ -199,53 +199,62 @@ class send extends Thread
         while(true)
         {
             String msg = sc.nextLine();
-            try
+            if(msg!="")
             {
-                DatagramPacket dp = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getByName("172.30.105.255"),3333);
-                ips.clear();
-                ds.send(dp);
-                Thread.sleep(4000);
-                System.out.println("InetAddresses" +ips);
-                System.out.println("Select one of the IP's");
-                System.out.println("*************0 1 2 3........*****************");
-                for( InetAddress i : ips)
-                {
-                    System.out.println(i.getHostAddress());
-                }
-                int choice = sc.nextInt();
-                ServerSocket ss = new ServerSocket(2222);
-                //String port = Integer.toString(ss.getLocalPort());
-                String port = "connect";
-                dp = new DatagramPacket(port.getBytes(),port.length(),InetAddress.getByName(ips.get(choice).getHostAddress()),3333);
-                ds.send(dp);
-                Socket s = ss.accept();
-                int filesize=1022386; 
-                int bytesRead; 
-                int currentTot = 0; 
-                Socket socket = new Socket("127.0.0.1",15123); 
-                byte [] bytearray = new byte [filesize]; 
-                InputStream is = socket.getInputStream(); 
-                FileOutputStream fos = new FileOutputStream(msg); 
-                BufferedOutputStream bos = new BufferedOutputStream(fos); 
-                bytesRead = is.read(bytearray,0,bytearray.length); 
-                currentTot = bytesRead; 
-                do 
-                { 
-                    bytesRead = is.read(bytearray, currentTot, (bytearray.length-currentTot)); 
-                    if(bytesRead >= 0) 
-                    currentTot += bytesRead; 
-                } while(bytesRead > -1); 
-                bos.write(bytearray, 0 , currentTot); 
-                bos.flush(); bos.close(); s.close();
-                s.close();
-                ss.close();
 
-               // ds.close();
+                try
+                {
+                    DatagramPacket dp = new DatagramPacket(msg.getBytes(),msg.length(),InetAddress.getByName("172.30.105.255"),3333);
+                    ips.clear();
+                    ds.send(dp);
+                    Thread.sleep(4000);
+                    System.out.println("InetAddresses" +ips);
+                    System.out.println("Select one of the IP's");
+                    System.out.println("*************0 1 2 3........*****************");
+                    for( InetAddress i : ips)
+                    {
+                        System.out.println(i.getHostAddress());
+                    }
+                    int choice = sc.nextInt();
+                    ServerSocket ss = new ServerSocket(2222);
+                    //String port = Integer.toString(ss.getLocalPort());
+                    String port = "connect";
+                    dp = new DatagramPacket(port.getBytes(),port.length(),InetAddress.getByName(ips.get(choice).getHostAddress()),3333);
+                    ds.send(dp);
+                    System.out.println("sent request");
+                    Socket s = ss.accept();
+                    System.out.println("connected");
+                    int filesize=1022386; 
+                    int bytesRead; 
+                    int currentTot = 0; 
+                    //Socket socket = new Socket("127.0.0.1",15123); 
+                    byte [] bytearray = new byte [filesize]; 
+                    InputStream is = s.getInputStream(); 
+                    FileOutputStream fos = new FileOutputStream(msg); 
+                    BufferedOutputStream bos = new BufferedOutputStream(fos); 
+                    bytesRead = is.read(bytearray,0,bytearray.length); 
+                    currentTot = bytesRead; 
+                    do 
+                    { 
+                        bytesRead = is.read(bytearray, currentTot, (bytearray.length-currentTot)); 
+                        if(bytesRead >= 0) 
+                        currentTot += bytesRead; 
+                    } while(bytesRead > -1); 
+                    bos.write(bytearray, 0 , currentTot); 
+                    bos.flush(); bos.close();
+                    s.close();
+                    ss.close();
+                    System.out.println("File transfer complete");
+    
+                   // ds.close();
+                }
+                catch(Exception e)
+                {
+                    System.out.println(e);
+                }
+
             }
-            catch(Exception e)
-            {
-                System.out.println(e);
-            }
+            
         }   
     }
 }
