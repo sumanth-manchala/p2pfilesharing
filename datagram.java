@@ -3,7 +3,7 @@ import java.io.DataOutputStream;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-
+import java.time.*;
 class MyIpAddress 
 {
     Vector <String> ip ;
@@ -127,13 +127,16 @@ class receive extends Thread
                         OutputStream os = s.getOutputStream();
                         System.out.println("Sending Files..."); 
                         int count;
+                        Instant start = Instant.now();
                         while((count = fin.read(bytearray))>=0)
                         {
                             //System.out.println("Sending "+count +" bytes of data");
                             os.write(bytearray,0,count);
                         }
                         s.close();
-                        System.out.println("File transfer complete");
+                        Instant end = Instant.now();
+                        Duration timeElapsed = Duration.between(start,end);
+                        System.out.println("File transfer complete in "+timeElapsed.getSeconds());
                     }
                     else if((msg.startsWith("File found")||msg.equalsIgnoreCase("File not found")))
                     {  
@@ -226,6 +229,7 @@ class send extends Thread
                     System.out.println("sent request");
                     Socket s = ss.accept();
                     System.out.println("connected"); 
+                    Instant start = Instant.now();
                     byte [] bytearray = new byte [1024]; 
                     InputStream is = s.getInputStream(); 
                     FileOutputStream fos = new FileOutputStream(msg);
@@ -236,7 +240,9 @@ class send extends Thread
                     } 
                     s.close();
                     ss.close();
-                    System.out.println("File transfer complete");
+                    Instant end = Instant.now();
+                    Duration timeElapsed = Duration.between(start, end);
+                    System.out.println("File transfer complete in "+timeElapsed);
     
                    // ds.close();
                 }
