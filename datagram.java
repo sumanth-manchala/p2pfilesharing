@@ -1,6 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
+import java.io.*;
 import java.net.*;
 import java.util.*;
 
@@ -83,7 +83,7 @@ class FileSearch
             }
             else if (name.equalsIgnoreCase(fil.getName()))
             {
-                receive.pf = fil.getParentFile();
+                receive.path = fil.getPath();
             }
         }
     }
@@ -91,12 +91,13 @@ class FileSearch
 class receive extends Thread
 {
     DatagramSocket dss;
-    static File pf;
+    static String requested,path;
 
     receive() throws SocketException
     {
         dss = new DatagramSocket(3333);
-        pf = null;
+        requested = "";
+        path= null;
     }
 
     @Override
@@ -114,16 +115,43 @@ class receive extends Thread
                 if(!myIpAddress.ip.contains(dp.getAddress().getHostAddress()))
                 {
                     String msg = new String(dp.getData(),0,dp.getLength());
-                    if(!(msg.startsWith("File found")||msg.equalsIgnoreCase("File not found")))
+                    if(msg.equalsIgnoreCase("connect"))
                     {
-                        pf = null;
+                        //StringTokenizer str = new StringTokenizer(msg," ");
+                        //int port = Integer.parseInt(str.nextToken());
+                        Thread.sleep(1000);
+                        Socket s = new Socket(dp.getAddress().getHostAddress(),2222);
+                        File transferFile = new File (path); 
+                        byte [] bytearray = new byte [(int)transferFile.length()]; 
+                        FileInputStream fin = new FileInputStream(transferFile); 
+                        BufferedInputStream bin = new BufferedInputStream(fin); 
+                        bin.read(bytearray,0,bytearray.length); 
+                        DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+                        System.out.println("Sending Files..."); 
+                        dout.write(bytearray,0,bytearray.length); 
+                        dout.flush(); 
+                        s.close();
+                        System.out.println("File transfer complete");
+                    }
+                    else if((msg.startsWith("File found")||msg.equalsIgnoreCase("File not found")))
+                    {  
+                       System.out.println(msg);
+                       if(msg.startsWith("File found"))
+                       {
+                           send.ips.add(dp.getAddress());
+                       }
+                    }
+                    else
+                    {
+                        path = null;
                         System.out.println("Requested file name is : "+dp.getAddress().getHostAddress()+" "+msg);
                         FileSearch fs = new FileSearch();
                         String respone;
+                        requested = msg;
                         fs.findFile(msg,new File("/home/sumanth/Documents"));
-                        if(pf!=null)
+                        if(path!=null)
                         {
-                            respone = "File found at " + pf.getName();
+                            respone = "File found at " + path;
                         }
                         else
                         {
@@ -131,23 +159,6 @@ class receive extends Thread
                         } 
                         dss.send(new DatagramPacket(respone.getBytes(),respone.length(), dp.getAddress(), 3333));
 
-                    }
-                    else if(msg.endsWith("connect"))
-                    {
-                        StringTokenizer str = new StringTokenizer(msg," ");
-                        int port = Integer.parseInt(str.nextToken());
-                        Socket s = new Socket(dp.getAddress().getHostAddress(),port);
-                        DataOutputStream dout = new DataOutputStream(s.getOutputStream());
-                        dout.writeUTF("Hi Server");
-                        s.close();
-                    }
-                    else
-                    {  
-                       System.out.println(msg);
-                       if(msg.startsWith("File found"))
-                       {
-                           send.ips.add(dp.getAddress());
-                       }
                     }
                     
                     //dss.send(new Datagra);
@@ -196,20 +207,36 @@ class send extends Thread
                 Thread.sleep(4000);
                 System.out.println("InetAddresses" +ips);
                 System.out.println("Select one of the IP's");
-                System.out.println("*0 1 2 3........");
+                System.out.println("*************0 1 2 3........*****************");
                 for( InetAddress i : ips)
                 {
                     System.out.println(i.getHostAddress());
                 }
                 int choice = sc.nextInt();
-                ServerSocket ss = new ServerSocket();
-                String port = Integer.toString(ss.getLocalPort());
-                port += "connect";
+                ServerSocket ss = new ServerSocket(2222);
+                //String port = Integer.toString(ss.getLocalPort());
+                String port = "connect";
                 dp = new DatagramPacket(port.getBytes(),port.length(),InetAddress.getByName(ips.get(choice).getHostAddress()),3333);
                 ds.send(dp);
                 Socket s = ss.accept();
-                DataInputStream din = new DataInputStream(s.getInputStream());
-                System.out.println((String)din.readUTF());
+                int filesize=1022386; 
+                int bytesRead; 
+                int currentTot = 0; 
+                Socket socket = new Socket("127.0.0.1",15123); 
+                byte [] bytearray = new byte [filesize]; 
+                InputStream is = socket.getInputStream(); 
+                FileOutputStream fos = new FileOutputStream(msg); 
+                BufferedOutputStream bos = new BufferedOutputStream(fos); 
+                bytesRead = is.read(bytearray,0,bytearray.length); 
+                currentTot = bytesRead; 
+                do 
+                { 
+                    bytesRead = is.read(bytearray, currentTot, (bytearray.length-currentTot)); 
+                    if(bytesRead >= 0) 
+                    currentTot += bytesRead; 
+                } while(bytesRead > -1); 
+                bos.write(bytearray, 0 , currentTot); 
+                bos.flush(); bos.close(); s.close();
                 s.close();
                 ss.close();
 
