@@ -121,15 +121,17 @@ class receive extends Thread
                         //int port = Integer.parseInt(str.nextToken());
                         Thread.sleep(1000);
                         Socket s = new Socket(dp.getAddress().getHostAddress(),2222);
-                        File transferFile = new File (path); 
-                        byte [] bytearray = new byte [(int)transferFile.length()]; 
-                        FileInputStream fin = new FileInputStream(transferFile); 
-                        BufferedInputStream bin = new BufferedInputStream(fin); 
-                        bin.read(bytearray,0,bytearray.length); 
-                        DataOutputStream dout = new DataOutputStream(s.getOutputStream());
+                        byte [] bytearray = new byte [1024];
+                        System.out.println("path "+path); 
+                        FileInputStream fin = new FileInputStream(new File(path));  
+                        OutputStream os = s.getOutputStream();
                         System.out.println("Sending Files..."); 
-                        dout.write(bytearray,0,bytearray.length); 
-                        dout.flush(); 
+                        int count;
+                        while((count = fin.read(bytearray))>=0)
+                        {
+                            //System.out.println("Sending "+count +" bytes of data");
+                            os.write(bytearray,0,count);
+                        }
                         s.close();
                         System.out.println("File transfer complete");
                     }
@@ -199,7 +201,7 @@ class send extends Thread
         while(true)
         {
             String msg = sc.nextLine();
-            if(msg!="")
+            if(msg!="" || msg!=null || msg!=" ")
             {
 
                 try
@@ -223,25 +225,15 @@ class send extends Thread
                     ds.send(dp);
                     System.out.println("sent request");
                     Socket s = ss.accept();
-                    System.out.println("connected");
-                    int filesize=1022386; 
-                    int bytesRead; 
-                    int currentTot = 0; 
-                    //Socket socket = new Socket("127.0.0.1",15123); 
-                    byte [] bytearray = new byte [filesize]; 
+                    System.out.println("connected"); 
+                    byte [] bytearray = new byte [1024]; 
                     InputStream is = s.getInputStream(); 
-                    FileOutputStream fos = new FileOutputStream(msg); 
-                    BufferedOutputStream bos = new BufferedOutputStream(fos); 
-                    bytesRead = is.read(bytearray,0,bytearray.length); 
-                    currentTot = bytesRead; 
-                    do 
-                    { 
-                        bytesRead = is.read(bytearray, currentTot, (bytearray.length-currentTot)); 
-                        if(bytesRead >= 0) 
-                        currentTot += bytesRead; 
-                    } while(bytesRead > -1); 
-                    bos.write(bytearray, 0 , currentTot); 
-                    bos.flush(); bos.close();
+                    FileOutputStream fos = new FileOutputStream(msg);
+                    int count;
+                    while((count = is.read(bytearray))>=0)
+                    {
+                        fos.write(bytearray, 0, count);
+                    } 
                     s.close();
                     ss.close();
                     System.out.println("File transfer complete");
